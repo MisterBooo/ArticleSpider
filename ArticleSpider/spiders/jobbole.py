@@ -1,33 +1,1 @@
-# -*- coding: utf-8 -*-
-import scrapy
-import re
-
-class JobboleSpider(scrapy.Spider):
-    name = 'jobbole'
-    allowed_domains = ['blog.jobbole.com']
-    start_urls = ['http://blog.jobbole.com/110287/']
-
-    def parse(self, response):
-
-        # 推荐使用class型，因为后期循环爬取可扩展通用性强。
-        title = response.xpath('//div[@class="entry-header"]/h1/text()').extract_first("")
-        create_date = response.xpath('//p[@class="entry-meta-hide-on-mobile"]/text()').extract()[0].strip().replace("·",'').strip()
-        praise_nums = response.xpath('//span[contains(@class,"vote-post-up")]/h10/text()').extract_first("")
-        fav_nums =  response.xpath('//span[contains(@class,"bookmark-btn")]/text()').extract_first("")
-        match_re = re.match(".*?(\d+).*?",fav_nums)
-        if match_re:
-            fav_nums = match_re.group(1)
-
-        comment_nums = response.xpath("//a[@href='#article-comment']/span/text()").extract()[0]
-        match_re = re.match(".*?(\d+).*", comment_nums)
-        if match_re:
-            comment_nums = match_re.group(1)
-
-        content = response.xpath("//div[@class='entry']").extract()[0]
-
-        tag_list = response.xpath("//p[@class='entry-meta-hide-on-mobile']/a/text()").extract()
-        tag_list = [element for element in tag_list if not element.strip().endswith("评论")]
-        tags = ",".join(tag_list)
-
-
-        pass
+# -*- coding: utf-8 -*-import scrapyimport refrom scrapy.http import Requestfrom urllib import parseclass JobboleSpider(scrapy.Spider):    name = 'jobbole'    allowed_domains = ['blog.jobbole.com']    start_urls = ['http://blog.jobbole.com/all-posts/']    def parse(self, response):        post_urls = response.xpath('//div[@id="archive"]//div[contains(@class,"post-thumb")]/a/@href').extract()        for post_url in post_urls:            print(post_url)            # request下载完成之后，回调parse_detail进行文章详情页的解析            # yield Request(url=parse.urljoin(response.url,post_url),callback=self.parse_detail)        # 提取下一页并交给scrapy进行下载        next_url = response.xpath('//a[@class="next page-numbers"]/@href').extract_first()        if next_url:            print( next_url)            yield  Request(url=parse.urljoin(response.url,next_url),callback=self.parse)        else:            print("最后一页了")    def parse_detail(self,response):        # 推荐使用class型，因为后期循环爬取可扩展通用性强。        title = response.xpath('//div[@class="entry-header"]/h1/text()').extract_first("")        create_date = response.xpath('//p[@class="entry-meta-hide-on-mobile"]/text()').extract()[0].strip().replace("·",'').strip()        praise_nums = response.xpath('//span[contains(@class,"vote-post-up")]/h10/text()').extract_first("")        fav_nums =  response.xpath('//span[contains(@class,"bookmark-btn")]/text()').extract_first("")        match_re = re.match(".*?(\d+).*?",fav_nums)        if match_re:            fav_nums = match_re.group(1)        comment_nums = response.xpath("//a[@href='#article-comment']/span/text()").extract()[0]        match_re = re.match(".*?(\d+).*", comment_nums)        if match_re:            comment_nums = match_re.group(1)        content = response.xpath("//div[@class='entry']").extract()[0]        tag_list = response.xpath("//p[@class='entry-meta-hide-on-mobile']/a/text()").extract()        tag_list = [element for element in tag_list if not element.strip().endswith("评论")]        tags = ",".join(tag_list)        pass
